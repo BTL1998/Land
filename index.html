@@ -1,3 +1,4 @@
+<!-- index.html - BTL-VerseLand Single Page -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,13 +8,51 @@
   <link rel="stylesheet" href="./assets/css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
-  <h1>BTL-VerseLand - Land Map (10x10)</h1>
-  <button onclick="connectWallet()">Connect Metamask</button>
-  <div id="map"></div>
+  <h1>BTL-VerseLand</h1>
+  <button onclick="connectWallet()">🔗 Connect Metamask</button>
+
+  <nav>
+    <button onclick="showSection('mapSection')">🗺️ Land Map</button>
+    <button onclick="showSection('landDetailSection')">🏝️ My Land</button>
+    <button onclick="showSection('marketSection')">🛒 Marketplace</button>
+    <button onclick="showSection('uploadSection')">📤 Upload Model</button>
+  </nav>
+
+  <section id="mapSection">
+    <h2>Land Map (10x10)</h2>
+    <div id="map"></div>
+  </section>
+
+  <section id="landDetailSection" style="display:none">
+    <h2>Land Detail</h2>
+    <div>ID: <span id="landId"></span></div>
+    <div id="landView"></div>
+  </section>
+
+  <section id="marketSection" style="display:none">
+    <h2>Marketplace</h2>
+    <div id="marketplaceList"></div>
+  </section>
+
+  <section id="uploadSection" style="display:none">
+    <h2>Upload 3D Model / Image</h2>
+    <input type="file" id="modelFile" accept=".glb,.gltf,.jpg,.png" />
+    <button onclick="uploadModel()">Upload</button>
+    <p id="uploadStatus"></p>
+  </section>
 
   <script src="./js/web3-init.js"></script>
   <script src="./js/land.js"></script>
+  <script src="./js/upload.js"></script>
+  <script src="./js/marketplace.js"></script>
+  <script>
+    function showSection(id) {
+      document.querySelectorAll('section').forEach(sec => sec.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+    }
+  </script>
 </body>
 </html>
