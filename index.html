@@ -46,6 +46,12 @@
       height: 60vh;
       touch-action: none;
     }
+    #balanceDisplay {
+      text-align: center;
+      margin: 10px auto;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
     section {
       display: none;
       padding: 15px;
@@ -69,6 +75,7 @@
 <body>
   <h1>🌐 BTL-VerseLand</h1>
   <button onclick="connectWallet()" style="display:block;margin:10px auto;">🔗 Connect Metamask (KUB Testnet)</button>
+  <div id="balanceDisplay">💰 Balance: -</div>
 
   <nav>
     <button onclick="showSection('mapSection')">🗺️ Land Map</button>
@@ -128,12 +135,25 @@
           userAddress = await signer.getAddress();
           console.log("Connected:", userAddress);
           alert("Connected: " + userAddress);
+
+          updateBalance();
         } catch (err) {
           console.error(err);
           alert("Failed to connect to KUB Testnet");
         }
       } else {
         alert("Please install Metamask.");
+      }
+    }
+
+    async function updateBalance() {
+      try {
+        const balanceBigInt = await provider.getBalance(userAddress);
+        const balance = ethers.utils.formatEther(balanceBigInt);
+        document.getElementById('balanceDisplay').innerText = `💰 Balance: ${parseFloat(balance).toFixed(4)} tKUB`;
+      } catch (error) {
+        console.error('Failed to fetch balance', error);
+        document.getElementById('balanceDisplay').innerText = '💰 Balance: Error';
       }
     }
 
