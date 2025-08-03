@@ -111,7 +111,7 @@
     let provider, signer, userAddress;
     async function connectWallet() {
       if (window.ethereum) {
-        const bitkubTestnet = {
+        const kubTestnet = {
           chainId: '0x6565', // 25925 decimal
           chainName: 'KUB Testnet',
           nativeCurrency: {
@@ -126,7 +126,7 @@
         try {
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
-            params: [bitkubTestnet]
+            params: [kubTestnet]
           });
 
           provider = new ethers.providers.Web3Provider(window.ethereum);
