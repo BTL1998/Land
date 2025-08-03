@@ -68,7 +68,7 @@
 </head>
 <body>
   <h1>🌐 BTL-VerseLand</h1>
-  <button onclick="connectWallet()" style="display:block;margin:10px auto;">🔗 Connect Metamask (BitkubChain Testnet)</button>
+  <button onclick="connectWallet()" style="display:block;margin:10px auto;">🔗 Connect Metamask (KUB Testnet)</button>
 
   <nav>
     <button onclick="showSection('mapSection')">🗺️ Land Map</button>
@@ -105,15 +105,15 @@
     async function connectWallet() {
       if (window.ethereum) {
         const bitkubTestnet = {
-          chainId: '0x65', // 101 = 0x65
-          chainName: 'BitkubChain Testnet',
+          chainId: '0x6565', // 25925 decimal
+          chainName: 'KUB Testnet',
           nativeCurrency: {
             name: 'tKUB',
             symbol: 'tKUB',
             decimals: 18
           },
           rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
-          blockExplorerUrls: ['https://testnet.kubscan.com']
+          blockExplorerUrls: ['https://testnet.bkcscan.com']
         };
 
         try {
@@ -130,7 +130,7 @@
           alert("Connected: " + userAddress);
         } catch (err) {
           console.error(err);
-          alert("Failed to connect to BitkubChain Testnet");
+          alert("Failed to connect to KUB Testnet");
         }
       } else {
         alert("Please install Metamask.");
