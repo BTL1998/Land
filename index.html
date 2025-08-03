@@ -170,23 +170,27 @@
 
     async function connectWallet() {
       if (window.ethereum) {
-        const kubTestnet = {
-          chainId: '0x65D5',  // 25925 decimal
-          chainName: 'KUB Testnet',
-          nativeCurrency: {
-            name: 'tKUB',
-            symbol: 'tKUB',
-            decimals: 18
-          },
-          rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
-          blockExplorerUrls: ['https://testnet.bkcscan.com']
-        };
+       const kubTestnet = {
+  chainId: '0x65ED',  // 25925 decimal (ถูกต้อง)
+  chainName: 'KUB Testnet',
+  nativeCurrency: {
+    name: 'tKUB',
+    symbol: 'tKUB',
+    decimals: 18
+  },
+  rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
+  blockExplorerUrls: ['https://testnet.bkcscan.com']
+};
 
-        try {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [kubTestnet]
-          });
+try {
+  await window.ethereum.request({
+    method: 'wallet_addEthereumChain',
+    params: [kubTestnet]
+  });
+  //...
+} catch(e) {
+  //...
+}
 
           provider = new ethers.providers.Web3Provider(window.ethereum);
           await provider.send("eth_requestAccounts", []);
