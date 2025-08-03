@@ -112,20 +112,44 @@
   </section>
 
   <script>
-    // js/web3-init.js
+    // Connect to BitkubChain Testnet
     let provider;
     let signer;
     let userAddress;
+
     async function connectWallet() {
-      if (window.ethereum) {
+      if (!window.ethereum) {
+        alert("Please install Metamask.");
+        return;
+      }
+
+      const bitkubChainTestnet = {
+        chainId: '0x65F', // 1631 in hex
+        chainName: 'BitkubChain Testnet',
+        nativeCurrency: {
+          name: 'Bitkub Testnet Token',
+          symbol: 'TKUB',
+          decimals: 18
+        },
+        rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
+        blockExplorerUrls: ['https://testnet.kubscan.com']
+      };
+
+      try {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [bitkubChainTestnet]
+        });
+
         provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
         console.log("Connected:", userAddress);
-        alert("Connected: " + userAddress);
-      } else {
-        alert("Please install Metamask.");
+        alert("✅ Connected: " + userAddress);
+      } catch (err) {
+        console.error("❌ Connection Error:", err);
+        alert("Failed to connect to BitkubChain Testnet");
       }
     }
 
