@@ -45,6 +45,7 @@
       width: 100vw;
       height: 60vh;
       touch-action: none;
+      background-color: #000000;
     }
     #balanceDisplay {
       text-align: center;
@@ -85,7 +86,7 @@
   </nav>
 
   <section id="mapSection" class="active-section">
-    <h2>Land Map 3D (10x10)</h2>
+    <h2>Land Map 3D (Mixed Sizes)</h2>
     <div id="threeContainer"></div>
   </section>
 
@@ -112,16 +113,16 @@
     async function connectWallet() {
       if (window.ethereum) {
         const kubTestnet = {
-  chainId: '0x65D5',  // 25957 decimal เป็นเลขฐาน16
-  chainName: 'KUB Testnet',
-  nativeCurrency: {
-    name: 'tKUB',
-    symbol: 'tKUB',
-    decimals: 18
-  },
-  rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
-  blockExplorerUrls: ['https://testnet.bkcscan.com']
-};
+          chainId: '0x65D5',  // 25957 decimal
+          chainName: 'KUB Testnet',
+          nativeCurrency: {
+            name: 'tKUB',
+            symbol: 'tKUB',
+            decimals: 18
+          },
+          rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
+          blockExplorerUrls: ['https://testnet.bkcscan.com']
+        };
         
         try {
           await window.ethereum.request({
@@ -164,11 +165,24 @@
 
     // 3D Land Scene
     let scene, camera, renderer, raycaster, mouse, landObjects = [], controls;
+
+    // Land configurations: [label, width (x), depth (z), color, base position]
+    // We'll layout lands side by side with spacing between groups
+    const landConfigs = [
+      { label: 'A', width: 10, depth: 10, color: 0x1abc9c, startX: 0, startZ: 0 },
+      { label: 'B', width: 10, depth: 20, color: 0xe67e22, startX: 25, startZ: 0 },
+      { label: 'C', width: 30, depth: 10, color: 0x9b59b6, startX: 0, startZ: 30 },
+      { label: 'D', width: 20, depth: 20, color: 0xe74c3c, startX: 35, startZ: 25 }
+    ];
+
     function init3DMap() {
       const container = document.getElementById('threeContainer');
       scene = new THREE.Scene();
+
       camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-      renderer = new THREE.WebGLRenderer({ antialias: true });
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setClearColor(0x000000, 1);
       renderer.setSize(container.clientWidth, container.clientHeight);
       container.appendChild(renderer.domElement);
 
@@ -183,28 +197,58 @@
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
 
-      const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-      scene.add(light);
+      // Add light
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+      scene.add(hemiLight);
 
-      const gridSize = 10;
-      const spacing = 2;
+      // Add ground grid helper for reference
+      //const gridHelper = new THREE.GridHelper(100, 100);
+      //scene.add(gridHelper);
 
-      for (let x = 0; x < gridSize; x++) {
-        for (let z = 0; z < gridSize; z++) {
-          const geometry = new THREE.BoxGeometry(1.5, 0.5, 1.5);
-          const material = new THREE.MeshStandardMaterial({ color: 0x1abc9c });
-          const land = new THREE.Mesh(geometry, material);
-          land.position.set(x * spacing, 0, z * spacing);
-          land.userData = { id: `${x}-${z}` };
-          landObjects.push(land);
-          scene.add(land);
+      landObjects = [];
+
+      // For each land config, create boxes representing land plots
+      for (const landConfig of landConfigs) {
+        for (let x = 0; x < landConfig.width; x++) {
+          for (let z = 0; z < landConfig.depth; z++) {
+            const geometry = new THREE.BoxGeometry(1.5, 0.5, 1.5);
+            const material = new THREE.MeshStandardMaterial({ color: landConfig.color });
+            const land = new THREE.Mesh(geometry, material);
+
+            // Position with offset for each land type
+            land.position.set(
+              landConfig.startX + x * 2,
+              0,
+              landConfig.startZ + z * 2
+            );
+            land.userData = {
+              id: `${landConfig.label}-${x}-${z}`,
+              type: landConfig.label
+            };
+            landObjects.push(land);
+            scene.add(land);
+          }
         }
       }
 
-      camera.position.set(gridSize, gridSize * 0.8, gridSize * 2);
-      camera.lookAt(scene.position);
+      // Calculate center of all lands to center camera
+      // Rough center by averaging start positions + sizes
+      const maxX = Math.max(...landConfigs.map(l => l.startX + l.width * 2));
+      const maxZ = Math.max(...landConfigs.map(l => l.startZ + l.depth * 2));
+      const centerX = maxX / 2;
+      const centerZ = maxZ / 2;
+
+      camera.position.set(centerX, 60, centerZ + 20);
+      camera.lookAt(centerX, 0, centerZ);
+
+      window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
 
       animate();
+
       container.addEventListener('click', onLandClick, false);
     }
 
@@ -216,8 +260,18 @@
 
     function onLandClick(event) {
       const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      let clientX, clientY;
+      if(event.touches && event.touches.length > 0){
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+      } else {
+        clientX = event.clientX;
+        clientY = event.clientY;
+      }
+
+      mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(landObjects);
@@ -225,8 +279,9 @@
       if (intersects.length > 0) {
         const land = intersects[0].object;
         const id = land.userData.id;
-        alert("🌍 Selected Land: " + id);
-        document.getElementById("landId").innerText = id;
+        const type = land.userData.type;
+        alert(`🌍 Selected Land: ${id} (Type ${type})`);
+        document.getElementById("landId").innerText = `${id} (Type ${type})`;
         showSection('landDetailSection');
       }
     }
