@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BTL-VerseLand Complete</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -109,15 +109,15 @@
 <body>
 
   <h1>🌐 BTL-VerseLand Complete</h1>
-  <button id="connectBtn" style="display:block; margin: 0 auto 10px auto; max-width: 300px; font-size:1.1rem;">🔗 Connect Metamask (KUB Testnet)</button>
+  <button onclick="connectWallet()" style="display:block; margin: 0 auto 10px auto; max-width: 300px; font-size:1.1rem;">🔗 Connect Metamask (KUB Testnet)</button>
   <div id="balanceDisplay">💰 Balance: -</div>
 
   <nav>
-    <button data-section="mapSection">🗺️ Land Map</button>
-    <button data-section="landDetailSection">🌽 Land Detail</button>
-    <button data-section="marketSection">🛒 Marketplace</button>
-    <button data-section="uploadSection">📄 Upload Model</button>
-    <button data-section="myLandSection">👤 My Land</button>
+    <button onclick="showSection('mapSection')">🗺️ Land Map</button>
+    <button onclick="showSection('landDetailSection')">🌽 Land Detail</button>
+    <button onclick="showSection('marketSection')">🛒 Marketplace</button>
+    <button onclick="showSection('uploadSection')">📄 Upload Model</button>
+    <button onclick="showSection('myLandSection')">👤 My Land</button>
   </nav>
 
   <!-- Land Map 3D -->
@@ -138,9 +138,9 @@
     <div><b>Model Preview:</b></div>
     <div id="landModelPreview" style="width: 100%; height: 300px; background: #111; border-radius: 8px;"></div>
     <div style="margin-top: 15px;">
-      <button id="buyLandBtn" style="background:#27ae60; display:none;">💰 Buy Land</button>
-      <button id="sellLandBtn" style="background:#c0392b; display:none;">📤 Sell Land</button>
-      <button id="cancelSellBtn" style="background:#e67e22; display:none;">❌ Cancel Sell</button>
+      <button id="buyLandBtn" onclick="buyLand()" style="background:#27ae60; display:none;">💰 Buy Land</button>
+      <button id="sellLandBtn" onclick="sellLand()" style="background:#c0392b; display:none;">📤 Sell Land</button>
+      <button id="cancelSellBtn" onclick="cancelSell()" style="background:#e67e22; display:none;">❌ Cancel Sell</button>
     </div>
   </section>
 
@@ -154,7 +154,7 @@
   <section id="uploadSection">
     <h2>Upload 3D Model / Image</h2>
     <input type="file" id="modelFile" accept=".glb,.gltf,.jpg,.png" />
-    <button id="uploadBtn">Upload</button>
+    <button onclick="uploadModel()">Upload</button>
     <p id="uploadStatus"></p>
   </section>
 
@@ -169,47 +169,27 @@
     let provider, signer, userAddress;
 
     async function connectWallet() {
-  if (window.ethereum) {
-    const kubTestnet = {
-      chainId: '0x65ED',  // 25925 decimal
-      chainName: 'KUB Testnet',
-      nativeCurrency: {
-        name: 'tKUB',
-        symbol: 'tKUB',
-        decimals: 18
-      },
-      rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
-      blockExplorerUrls: ['https://testnet.bkcscan.com']
-    };
+      if (window.ethereum) {
+        const kubTestnet = {
+          chainId: '0x65ED',  // 25925 decimal (ถูกต้อง)
+          chainName: 'KUB Testnet',
+          nativeCurrency: {
+            name: 'tKUB',
+            symbol: 'tKUB',
+            decimals: 18
+          },
+          rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
+          blockExplorerUrls: ['https://testnet.bkcscan.com']
+        };
 
-    try {
-      await window.ethereum.request({
-        method: 'wallet_addEthereumChain',
-        params: [kubTestnet]
-      });
-
-      // หลังจากเพิ่มหรือเปลี่ยน chain สำเร็จ เชื่อมต่อ wallet
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      userAddress = await signer.getAddress();
-
-      alert("Connected wallet: " + userAddress);
-
-      // เรียกฟังก์ชันอื่น ๆ ที่จะโหลดข้อมูลหรืออัปเดต UI ตามที่ต้องการ เช่น
-      updateBalance();
-      loadMyLand();
-      loadMarketplace();
-
-    } catch (e) {
-      console.warn("Add chain error or user rejected:", e.message);
-      alert("Error connecting to wallet: " + e.message);
-    }
-  } else {
-    alert("Please install Metamask!");
-  }
-}
-
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [kubTestnet]
+          });
+        } catch (e) {
+          console.warn("Add chain error or user rejected:", e.message);
+        }
 
         try {
           provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -273,7 +253,7 @@
           for(let z=0; z<depth; z++) {
             const id = `${label}-${x}-${z}`;
             blockchainData.lands[id] = {
-              owner: Math.random() > 0.8 ? "0x123...abc" : (userAddress || "0xabc...123"),
+              owner: Math.random() > 0.8 ? "0x123...abc" : userAddress || "0xabc...123",
               price: null,
               description: `This is Land ${id}. Beautiful plot!`,
               modelUrl: null
@@ -451,144 +431,165 @@
       }
     }
 
-    // Buy Land (dummy function)
-    function buyLand() {
+    // Buy land function (simulate)
+    async function buyLand() {
       const landId = document.getElementById('landId').innerText;
-      if(!userAddress) return alert("Please connect wallet first.");
-      const data = blockchainData.lands[landId];
-      if(!data || data.price === null) return alert("This land is not for sale.");
+      if(!landId) return alert("No land selected.");
 
-      if(confirm(`Buy land ${landId} for ${data.price} tKUB?`)) {
-        // TODO: Call smart contract buy function here
-        alert("Simulate buy land - replace with real contract call.");
-        // Update owner & price in dummy data
-        data.owner = userAddress;
-        data.price = null;
+      const land = blockchainData.lands[landId];
+      if(!land || land.price === null) return alert("This land is not for sale.");
+
+      if(!signer) return alert("Connect wallet first.");
+
+      // Simulate buy: Transfer ownership and remove from sale
+      // TODO: Integrate real smart contract call here
+
+      if(confirm(`Confirm buying land ${landId} for ${land.price} tKUB?`)) {
+        // Deduct balance, transfer ownership simulation
+        land.owner = userAddress;
+        land.price = null;
         marketplaceForSale.delete(landId);
+
+        alert("Purchase successful!");
+
+        showLandDetail(landId);
+        loadMarketplace();
+        loadMyLand();
+        updateBalance();
+      }
+    }
+
+    // Sell land function (simulate)
+    async function sellLand() {
+      const landId = document.getElementById('landId').innerText;
+      if(!landId) return alert("No land selected.");
+
+      const land = blockchainData.lands[landId];
+      if(!land) return alert("Land not found.");
+
+      if(!signer) return alert("Connect wallet first.");
+
+      const priceStr = prompt("Enter sale price in tKUB:");
+      if(priceStr === null) return; // canceled
+
+      const price = parseFloat(priceStr);
+      if(isNaN(price) || price <= 0) {
+        return alert("Invalid price.");
+      }
+
+      // Simulate sale
+      land.price = price;
+      marketplaceForSale.add(landId);
+
+      alert("Land is now listed for sale.");
+
+      showLandDetail(landId);
+      loadMarketplace();
+      loadMyLand();
+    }
+
+    // Cancel sale function
+    async function cancelSell() {
+      const landId = document.getElementById('landId').innerText;
+      if(!landId) return alert("No land selected.");
+
+      const land = blockchainData.lands[landId];
+      if(!land) return alert("Land not found.");
+
+      if(!signer) return alert("Connect wallet first.");
+
+      if(land.price === null) return alert("Land is not for sale.");
+
+      if(confirm("Cancel sale of this land?")) {
+        land.price = null;
+        marketplaceForSale.delete(landId);
+
+        alert("Sale cancelled.");
+
         showLandDetail(landId);
         loadMarketplace();
         loadMyLand();
       }
     }
 
-    // Sell Land (dummy function)
-    function sellLand() {
-      const landId = document.getElementById('landId').innerText;
-      if(!userAddress) return alert("Please connect wallet first.");
-      const price = prompt("Set price (tKUB) to sell your land:");
-      if(!price || isNaN(price) || Number(price) <= 0) return alert("Invalid price.");
-
-      const data = blockchainData.lands[landId];
-      if(!data) return alert("Land data not found.");
-      if(data.owner.toLowerCase() !== userAddress.toLowerCase()) return alert("You are not the owner.");
-
-      data.price = Number(price);
-      marketplaceForSale.add(landId);
-      alert(`Land ${landId} set for sale at ${price} tKUB.`);
-      showLandDetail(landId);
-      loadMarketplace();
-    }
-
-    // Cancel sell (dummy)
-    function cancelSell() {
-      const landId = document.getElementById('landId').innerText;
-      const data = blockchainData.lands[landId];
-      if(!data) return alert("Land data not found.");
-      if(data.owner.toLowerCase() !== userAddress.toLowerCase()) return alert("You are not the owner.");
-
-      data.price = null;
-      marketplaceForSale.delete(landId);
-      alert(`Sale canceled for land ${landId}.`);
-      showLandDetail(landId);
-      loadMarketplace();
-    }
-
-    // Marketplace list display
+    // Load marketplace lands for sale
     function loadMarketplace() {
       const container = document.getElementById('marketplaceList');
-      container.innerHTML = '';
       if(marketplaceForSale.size === 0) {
-        container.innerHTML = '<p>No lands for sale.</p>';
+        container.innerHTML = "<p>No lands for sale right now.</p>";
         return;
       }
+
+      let html = '';
       marketplaceForSale.forEach(id => {
-        const data = blockchainData.lands[id];
-        if(!data) return;
-        const div = document.createElement('div');
-        div.textContent = `Land ${id} - Price: ${data.price} tKUB - Owner: ${data.owner}`;
-        div.onclick = () => showLandDetail(id);
-        container.appendChild(div);
+        const land = blockchainData.lands[id];
+        if(!land) return;
+        html += `<div onclick="showLandDetail('${id}')">
+          <b>${id}</b> - Price: ${land.price} tKUB - Owner: ${land.owner.substring(0,10)}...
+        </div>`;
       });
+      container.innerHTML = html;
     }
 
-    // My Land list display
+    // Load lands owned by user
     function loadMyLand() {
-      if(!userAddress) return;
-
       const container = document.getElementById('myLandList');
-      container.innerHTML = '';
-      let found = false;
-      Object.entries(blockchainData.lands).forEach(([id, data]) => {
-        if(data.owner && data.owner.toLowerCase() === userAddress.toLowerCase()) {
-          found = true;
-          const div = document.createElement('div');
-          div.textContent = `Land ${id} - ${data.price === null ? 'Not for sale' : 'For sale: ' + data.price + ' tKUB'}`;
-          div.onclick = () => showLandDetail(id);
-          container.appendChild(div);
+      if(!userAddress) {
+        container.innerHTML = "<p>Connect wallet to view your lands.</p>";
+        return;
+      }
+
+      let html = '';
+      for(const id in blockchainData.lands) {
+        if(blockchainData.lands[id].owner.toLowerCase() === userAddress.toLowerCase()) {
+          const land = blockchainData.lands[id];
+          html += `<div onclick="showLandDetail('${id}')">
+            <b>${id}</b> - ${land.price === null ? 'Not for sale' : 'For sale: ' + land.price + ' tKUB'}
+          </div>`;
         }
-      });
-      if(!found) container.innerHTML = '<p>You do not own any land yet.</p>';
+      }
+
+      container.innerHTML = html || "<p>You don't own any land.</p>";
     }
 
-    // Upload model file handler (simulate upload)
-    document.getElementById('uploadBtn').addEventListener('click', () => {
+    // Upload 3D Model or Image (fake upload simulation)
+    function uploadModel() {
+      if(!userAddress) return alert("Connect wallet first.");
       const fileInput = document.getElementById('modelFile');
-      const status = document.getElementById('uploadStatus');
-      const landId = document.getElementById('landId').innerText;
-      if(!fileInput.files.length) return alert('Please select a file first.');
-      if(!landId || landId === '-') return alert('Select a land to upload model.');
+      if(fileInput.files.length === 0) return alert("Select a file to upload.");
 
-      // For demo, we just simulate upload by creating object URL
       const file = fileInput.files[0];
-      const url = URL.createObjectURL(file);
+      const allowedExt = ['glb', 'gltf', 'jpg', 'png'];
+      const ext = file.name.split('.').pop().toLowerCase();
+      if(!allowedExt.includes(ext)) return alert("Unsupported file type.");
 
-      // Update model URL on dummy blockchain data
-      const data = blockchainData.lands[landId];
-      if(data && data.owner.toLowerCase() === userAddress.toLowerCase()) {
-        data.modelUrl = url;
-        status.style.color = 'lime';
-        status.textContent = `Uploaded model for land ${landId} successfully!`;
-        showLandDetail(landId);
-      } else {
-        status.style.color = 'red';
-        status.textContent = 'You are not owner of this land or land not found.';
-      }
-    });
+      // Fake upload process
+      const uploadStatus = document.getElementById('uploadStatus');
+      uploadStatus.style.color = "#0f0";
+      uploadStatus.innerText = "Uploading...";
 
-    // === Init ===
-    document.getElementById('connectBtn').addEventListener('click', connectWallet);
+      setTimeout(() => {
+        // Normally upload to IPFS or server and get URL
+        const fakeUrl = URL.createObjectURL(file);
+        const landId = document.getElementById('landId').innerText;
 
-    document.querySelectorAll('nav button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        showSection(btn.getAttribute('data-section'));
-      });
-    });
+        if(landId && blockchainData.lands[landId] && blockchainData.lands[landId].owner.toLowerCase() === userAddress.toLowerCase()) {
+          blockchainData.lands[landId].modelUrl = fakeUrl;
+          uploadStatus.innerText = "Upload complete! Model set for this land.";
+          showLandDetail(landId);
+        } else {
+          uploadStatus.style.color = "#f00";
+          uploadStatus.innerText = "Select your owned land first in Land Detail section.";
+        }
+      }, 1500);
+    }
 
-    // Land Detail buttons
-    document.getElementById('buyLandBtn').addEventListener('click', buyLand);
-    document.getElementById('sellLandBtn').addEventListener('click', sellLand);
-    document.getElementById('cancelSellBtn').addEventListener('click', cancelSell);
-
-    // Load dummy blockchain data on page load (simulate)
-    loadDummyBlockchainData();
-
-    // Initialize 3D Map when DOM loaded
-    window.addEventListener('DOMContentLoaded', () => {
+    // Init everything on page load
+    window.onload = () => {
+      loadDummyBlockchainData();
       init3DMap();
       clearModelPreview();
-    });
-
+    };
   </script>
-
 </body>
 </html>
