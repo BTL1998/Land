@@ -112,17 +112,17 @@
     async function connectWallet() {
       if (window.ethereum) {
         const kubTestnet = {
-          chainId: '0x6565', // 25925 decimal
-          chainName: 'KUB Testnet',
-          nativeCurrency: {
-            name: 'tKUB',
-            symbol: 'tKUB',
-            decimals: 18
-          },
-          rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
-          blockExplorerUrls: ['https://testnet.bkcscan.com']
-        };
-
+  chainId: '0x65D5',  // 25957 decimal เป็นเลขฐาน16
+  chainName: 'KUB Testnet',
+  nativeCurrency: {
+    name: 'tKUB',
+    symbol: 'tKUB',
+    decimals: 18
+  },
+  rpcUrls: ['https://rpc-testnet.bitkubchain.io'],
+  blockExplorerUrls: ['https://testnet.bkcscan.com']
+};
+        
         try {
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
