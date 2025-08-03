@@ -1,4 +1,3 @@
-// ตัวอย่างโครงสร้างข้อมูลขายที่สามารถดึงจาก smart contract ได้ในอนาคต
 const sampleMarketData = [
   { landId: 12, priceKKUB: 10 },
   { landId: 27, priceKKUB: 15 },
